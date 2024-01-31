@@ -6,6 +6,8 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javafx.application.Application;
 import javafx.event.ActionEvent;
@@ -37,7 +39,7 @@ public class AppInformes extends Application {
 
     public static Connection conexion = null;
     @FXML
-    private TextField txtNumCliente;
+    private TextField txtIdCliente;
 
     @Override
     public void start(Stage primaryStage) {
@@ -94,14 +96,32 @@ public class AppInformes extends Application {
             System.exit(1);
         }
     }
-    public void generaFacturas(String nombre_Informe) {
+    public void generaFacturas1y2(String nombre_Informe) {
         try {
             JasperReport jr = (JasperReport)JRLoader.loadObject(getClass().getResource(nombre_Informe));
 
             //Map de parámetros
             Map parametros = new HashMap();
 
-            String txtField = txtNumCliente.getText();
+            // Ya tenemos los datos para instanciar un objeto JasperPrint que permite ver,
+            // Imprimir o exportar a otros formatos
+            JasperPrint jp = (JasperPrint) JasperFillManager.fillReport(jr, parametros, conexion);
+            JasperViewer.viewReport(jp, false);
+        } catch (JRException ex) {
+            System.out.println("Error al recuperar el jasper");
+            JOptionPane.showMessageDialog(null, ex);
+        }
+    }
+
+    public void generaFacturasporCliente(String nombre_Informe) {
+        try {
+            JasperReport jr = (JasperReport)JRLoader.loadObject(getClass().getResource(nombre_Informe));
+
+            //Map de parámetros
+            Map parametros = new HashMap();
+
+            // Coje el texto del cuadro, lo parsea a Entero y lo usa como parámetro para generar el informe
+            String txtField = txtIdCliente.getText();
             if (txtField == ""){
                 System.err.println("No se ha introducido ningún número");
             }
@@ -141,7 +161,7 @@ public class AppInformes extends Application {
 
     public void generaListado_Facturas(){
         try{
-            generaFacturas(LISTADO_FACTURAS);
+            generaFacturas1y2(LISTADO_FACTURAS);
         }catch (Exception e){
             throw new RuntimeException();
         }
@@ -149,7 +169,7 @@ public class AppInformes extends Application {
 
     public void generaVentas_Totales(){
         try{
-            generaFacturas(VENTAS_TOTALES);
+            generaFacturas1y2(VENTAS_TOTALES);
         }catch (Exception e){
             throw new RuntimeException();
         }
@@ -157,9 +177,22 @@ public class AppInformes extends Application {
 
     public void generaFacturas_por_Cliente(){
         try{
-            generaFacturas(FACTURAS_POR_CLIENTE);
+            generaFacturasporCliente(FACTURAS_POR_CLIENTE);
         }catch (Exception e){
             throw new RuntimeException();
+        }
+    }
+
+    public void ventanaAceptar(){
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("introduceIdView.fxml"));
+            Parent root = loader.load();
+            Scene scene = new Scene(root);
+            Stage stage = new Stage();
+            stage.setScene(scene);
+            stage.showAndWait();
+        } catch (IOException ex) {
+            Logger.getLogger(AppInformes.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
